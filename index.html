@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E'lonlar Platformasi</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sarlavha qismi -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-bullhorn"></i>
+                <h1>E'lonlar Platformasi</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Bosh sahifa</a></li>
+                    <li><a href="#">Barcha e'lonlar</a></li>
+                    <li><a href="#">Kategoriyalar</a></li>
+                    <li><a href="#">Yangi e'lon</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <button class="btn-login">Kirish</button>
+                <button class="btn-register">Ro'yxatdan o'tish</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Til tanlash -->
+    <div class="language-switcher">
+        <div class="container">
+            <button class="lang-btn active">O'zbek</button>
+            <button class="lang-btn">Русский</button>
+            <button class="lang-btn">English</button>
+        </div>
+    </div>
+
+    <!-- Qidiruv qismi -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-box">
+                <input type="text" placeholder="E'lonlarni qidirish...">
+                <button><i class="fas fa-search"></i></button>
+            </div>
+            <div class="filters">
+                <select>
+                    <option value="">Barcha kategoriyalar</option>
+                    <option value="uy">🏡 Uy sotish va sotib olish</option>
+                    <option value="transport">🚗 Transport</option>
+                    <option value="kiyim">👕 Kiyimlar</option>
+                    <option value="elektronika">📱 Elektronika</option>
+                </select>
+                <select>
+                    <option value="">Barcha shaharlar</option>
+                    <option value="toshkent">Toshkent</option>
+                    <option value="samarqand">Samarqand</option>
+                    <option value="buxoro">Buxoro</option>
+                    <option value="andijon">Andijon</option>
+                </select>
+                <input type="number" placeholder="Narxdan">
+                <input type="number" placeholder="Narxgacha">
+                <button class="btn-filter">Qidirish</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kategoriyalar -->
+    <section class="categories">
+        <div class="container">
+            <h2>Kategoriyalar</h2>
+            <div class="category-list">
+                <div class="category-item">
+                    <div class="icon">🏡</div>
+                    <h3>Uy sotish va sotib olish</h3>
+                    <p>1254 e'lon</p>
+                </div>
+                <div class="category-item">
+                    <div class="icon">🚗</div>
+                    <h3>Transport</h3>
+                    <p>876 e'lon</p>
+                </div>
+                <div class="category-item">
+                    <div class="icon">👕</div>
+                    <h3>Kiyimlar</h3>
+                    <p>542 e'lon</p>
+                </div>
+                <div class="category-item">
+                    <div class="icon">📱</div>
+                    <h3>Elektronika</h3>
+                    <p>987 e'lon</p>
+                </div>
+                <div class="category-item">
+                    <div class="icon">🏨</div>
+                    <h3>Mehmonxonalar</h3>
+                    <p>321 e'lon</p>
+                </div>
+                <div class="category-item">
+                    <div class="icon">🏅</div>
+                    <h3>Sport jihozlari</h3>
+                    <p>234 e'lon</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- E'lonlar ro'yxati -->
+    <section class="announcements">
+        <div class="container">
+            <h2>So'ngi e'lonlar</h2>
+            <div class="announcement-list" id="announcementList">
+                <!-- E'lonlar JavaScript orqali yuklanadi -->
+            </div>
+            <div class="load-more">
+                <button id="loadMoreBtn">Ko'proq yuklash</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>E'lonlar Platformasi</h3>
+                    <p>Eng yirik e'lonlar platformasi. O'zingizga kerak bo'lgan narsalarni toping yoki o'zingizning mahsulotlaringizni soting.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Foydali havolalar</h3>
+                    <ul>
+                        <li><a href="#">Biz haqimizda</a></li>
+                        <li><a href="#">Qanday sotib olish kerak</a></li>
+                        <li><a href="#">Qanday sotish kerak</a></li>
+                        <li><a href="#">Xavfsizlik qoidalari</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Aloqa</h3>
+                    <p><i class="fas fa-phone"></i> +998 90 123 45 67</p>
+                    <p><i class="fas fa-envelope"></i> info@elonlar.uz</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Toshkent shahar, Yunusobod tumani</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Bizni kuzatib boring</h3>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 E'lonlar Platformasi. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
