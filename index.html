@@ -1,165 +1,120 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E'lonlar Platformasi</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reklama bilan xarita (Retina support)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    /* Reklama banneri */
+    .ad-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-radius: 0 0 12px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    .ad-banner img {
+      max-height: 70px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      position: absolute;
+    }
+    .ad-banner img.active {
+      opacity: 1;
+      position: relative;
+    }
+
+    /* Xarita */
+    #map {
+      position: absolute;
+      top: 80px;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-    <!-- Sarlavha qismi -->
-    <header>
-        <div class="container">
-            <div class="logo">
-                <i class="fas fa-bullhorn"></i>
-                <h1>E'lonlar Platformasi</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="#" class="active">Bosh sahifa</a></li>
-                    <li><a href="#">Barcha e'lonlar</a></li>
-                    <li><a href="#">Kategoriyalar</a></li>
-                    <li><a href="#">Yangi e'lon</a></li>
-                </ul>
-            </nav>
-            <div class="auth-buttons">
-                <button class="btn-login">Kirish</button>
-                <button class="btn-register">Ro'yxatdan o'tish</button>
-            </div>
-        </div>
-    </header>
+  <!-- Reklama joyi -->
+  <div class="ad-banner" id="adBanner">
+    <a id="adLink" href="#" target="_blank">
+      <img id="adImage" src="" alt="Reklama">
+    </a>
+  </div>
 
-    <!-- Til tanlash -->
-    <div class="language-switcher">
-        <div class="container">
-            <button class="lang-btn active">O'zbek</button>
-            <button class="lang-btn">Русский</button>
-            <button class="lang-btn">English</button>
-        </div>
-    </div>
+  <!-- Xarita -->
+  <div id="map"></div>
 
-    <!-- Qidiruv qismi -->
-    <section class="search-section">
-        <div class="container">
-            <div class="search-box">
-                <input type="text" placeholder="E'lonlarni qidirish...">
-                <button><i class="fas fa-search"></i></button>
-            </div>
-            <div class="filters">
-                <select>
-                    <option value="">Barcha kategoriyalar</option>
-                    <option value="uy">🏡 Uy sotish va sotib olish</option>
-                    <option value="transport">🚗 Transport</option>
-                    <option value="kiyim">👕 Kiyimlar</option>
-                    <option value="elektronika">📱 Elektronika</option>
-                </select>
-                <select>
-                    <option value="">Barcha shaharlar</option>
-                    <option value="toshkent">Toshkent</option>
-                    <option value="samarqand">Samarqand</option>
-                    <option value="buxoro">Buxoro</option>
-                    <option value="andijon">Andijon</option>
-                </select>
-                <input type="number" placeholder="Narxdan">
-                <input type="number" placeholder="Narxgacha">
-                <button class="btn-filter">Qidirish</button>
-            </div>
-        </div>
-    </section>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // ==== Demo reklamalar ====
+    const ads = [
+      { img: "https://via.placeholder.com/468x80/ff6666/ffffff?text=Reklama+1", url: "https://example.com/1" },
+      { img: "https://via.placeholder.com/468x80/66ccff/ffffff?text=Reklama+2", url: "https://example.com/2" },
+      { img: "https://via.placeholder.com/468x80/99cc66/ffffff?text=Reklama+3", url: "https://example.com/3" }
+    ];
+    let adIndex = 0;
+    const adImg = document.getElementById("adImage");
+    const adLink = document.getElementById("adLink");
 
-    <!-- Kategoriyalar -->
-    <section class="categories">
-        <div class="container">
-            <h2>Kategoriyalar</h2>
-            <div class="category-list">
-                <div class="category-item">
-                    <div class="icon">🏡</div>
-                    <h3>Uy sotish va sotib olish</h3>
-                    <p>1254 e'lon</p>
-                </div>
-                <div class="category-item">
-                    <div class="icon">🚗</div>
-                    <h3>Transport</h3>
-                    <p>876 e'lon</p>
-                </div>
-                <div class="category-item">
-                    <div class="icon">👕</div>
-                    <h3>Kiyimlar</h3>
-                    <p>542 e'lon</p>
-                </div>
-                <div class="category-item">
-                    <div class="icon">📱</div>
-                    <h3>Elektronika</h3>
-                    <p>987 e'lon</p>
-                </div>
-                <div class="category-item">
-                    <div class="icon">🏨</div>
-                    <h3>Mehmonxonalar</h3>
-                    <p>321 e'lon</p>
-                </div>
-                <div class="category-item">
-                    <div class="icon">🏅</div>
-                    <h3>Sport jihozlari</h3>
-                    <p>234 e'lon</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    function showAd(index) {
+      adImg.classList.remove("active");
+      setTimeout(() => {
+        adImg.src = ads[index].img;
+        adLink.href = ads[index].url;
+        adImg.classList.add("active");
+      }, 200);
+    }
 
-    <!-- E'lonlar ro'yxati -->
-    <section class="announcements">
-        <div class="container">
-            <h2>So'ngi e'lonlar</h2>
-            <div class="announcement-list" id="announcementList">
-                <!-- E'lonlar JavaScript orqali yuklanadi -->
-            </div>
-            <div class="load-more">
-                <button id="loadMoreBtn">Ko'proq yuklash</button>
-            </div>
-        </div>
-    </section>
+    // Dastlabki reklama
+    showAd(adIndex);
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>E'lonlar Platformasi</h3>
-                    <p>Eng yirik e'lonlar platformasi. O'zingizga kerak bo'lgan narsalarni toping yoki o'zingizning mahsulotlaringizni soting.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Foydali havolalar</h3>
-                    <ul>
-                        <li><a href="#">Biz haqimizda</a></li>
-                        <li><a href="#">Qanday sotib olish kerak</a></li>
-                        <li><a href="#">Qanday sotish kerak</a></li>
-                        <li><a href="#">Xavfsizlik qoidalari</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Aloqa</h3>
-                    <p><i class="fas fa-phone"></i> +998 90 123 45 67</p>
-                    <p><i class="fas fa-envelope"></i> info@elonlar.uz</p>
-                    <p><i class="fas fa-map-marker-alt"></i> Toshkent shahar, Yunusobod tumani</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Bizni kuzatib boring</h3>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-telegram"></i></a>
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 E'lonlar Platformasi. Barcha huquqlar himoyalangan.</p>
-            </div>
-        </div>
-    </footer>
+    // Har 5 sekundda random reklama
+    setInterval(() => {
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * ads.length);
+      } while (nextIndex === adIndex);
+      adIndex = nextIndex;
+      showAd(adIndex);
+    }, 5000);
 
-    <script src="script.js"></script>
+    // ==== Xarita ====
+    const map = L.map('map').setView([41.2995, 69.2401], 13); // Toshkent markazi
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a>',
+      maxZoom: 19,
+      detectRetina: true   // Retina (mobil uchun tiniq ko‘rinish)
+    }).addTo(map);
+
+    // Geolokatsiya
+    map.locate({ setView: true, maxZoom: 16 });
+    map.on('locationfound', e => {
+      L.marker(e.latlng).addTo(map)
+        .bindPopup("Siz shu yerda turibsiz").openPopup();
+    });
+    map.on('locationerror', () => {
+      console.warn("Geolokatsiya aniqlanmadi");
+    });
+  </script>
 </body>
 </html>
