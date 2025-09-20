@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uy-joy E'lonlari Xaritasi</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    /* CSS kodlari o'zgarmaydi */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .description {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .ad-banner {
+      background-color: white;
+      padding: 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .ad-content {
+      max-width: 100%;
+      max-height: 70px;
+      border-radius: 8px;
+      transition: opacity 0.5s ease;
+    }
+    
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+    
+    .filters {
+      padding: 1rem;
+      background-color: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    
+    select, button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      background-color: white;
+      font-size: 0.9rem;
+    }
+    
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #4338ca;
+    }
+    
+    .listing-popup {
+      max-width: 250px;
+    }
+    
+    .listing-popup h3 {
+      margin-bottom: 0.5rem;
+      color: #4f46e5;
+    }
+    
+    .listing-popup p {
+      margin: 0.25rem 0;
+    }
+    
+    .price {
+      font-weight: bold;
+      color: #10b981;
+    }
+    
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid #4f46e5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      select, button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Uy-joy E'lonlari Xaritasi</h1>
+      <p class="description">O'zingizga mos uy-joy toping</p>
+    </header>
+    
+    <div class="ad-banner">
+      <a href="#" id="adLink" target="_blank">
+        <img id="adImage" class="ad-content" src="" alt="Reklama">
+      </a>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="filters">
+      <select id="categoryFilter">
+        <option value="">Barcha kategoriyalar</option>
+        <option value="Oilaga">Oilaga</option>
+        <option value="Qizlarga">Qizlarga</option>
+        <option value="Bollarga">Bollarga</option>
+        <option value="Hammaga">Hammaga</option>
+      </select>
+      
+      <select id="roomFilter">
+        <option value="">Xonalar soni</option>
+        <option value="1">1 xona</option>
+        <option value="2">2 xona</option>
+        <option value="3">3 xona</option>
+        <option value="4">4 xona</option>
+        <option value="5+">5+ xona</option>
+      </select>
+      
+      <select id="priceFilter">
+        <option value="">Narx bo'yicha</option>
+        <option value="0-500000">500,000 so'mgacha</option>
+        <option value="500000-1000000">500,000 - 1,000,000 so'm</option>
+        <option value="1000000-2000000">1 - 2 million so'm</option>
+        <option value="2000000">2 million so'mdan</option>
+      </select>
+      
+      <button id="resetFilters">Filtrlarni tozalash</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // API bazaviy URL
+    const API_BASE_URL = 'https://asadbe.alwaysdata.net/api';  // O'z serveringizga o'zgartiring
+    
+    // Xaritani ishga tushirish
+    const map = L.map('map').setView([41.2995, 69.2401], 13);
+    
+    // Xarita qatlami
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+      detectRetina: true
+    }).addTo(map);
+    
+    // Geolokatsiyani so'rash
+    map.locate({setView: true, maxZoom: 16});
+    
+    // Demo reklamalar
+    const ads = [
+      { 
+        img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=100&q=80", 
+        url: "https://example.com/1" 
+      },
+      { 
+        img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=100&q=80", 
+        url: "https://example.com/2" 
+      },
+      { 
+        img: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=100&q=80", 
+        url: "https://example.com/3" 
+      }
+    ];
+    
+    let adIndex = 0;
+    const adImage = document.getElementById('adImage');
+    const adLink = document.getElementById('adLink');
+    
+    // Reklamalarni aylantirish
+    function rotateAds() {
+      adImage.style.opacity = 0;
+      
+      setTimeout(() => {
+        adImage.src = ads[adIndex].img;
+        adLink.href = ads[adIndex].url;
+        adImage.style.opacity = 1;
+        
+        adIndex = (adIndex + 1) % ads.length;
+      }, 500);
+    }
+    
+    // Dastlabki reklama
+    rotateAds();
+    
+    // Har 10 soniyada reklamani almashtirish
+    setInterval(rotateAds, 10000);
+    
+    // Xaritadagi markerlar
+    let markers = [];
+    
+    // API dan e'lonlarni olish
+    async function fetchListings(filters = {}) {
+      try {
+        // Loading ko'rsatish
+        showLoading();
+        
+        // URL parametrlarini yaratish
+        const params = new URLSearchParams();
+        
+        if (filters.category) params.append('category', filters.category);
+        if (filters.rooms) params.append('rooms', filters.rooms);
+        if (filters.min_price) params.append('min_price', filters.min_price);
+        if (filters.max_price) params.append('max_price', filters.max_price);
+        
+        const response = await fetch(`${API_BASE_URL}/listings?${params}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP xatosi: ${response.status}`);
+        }
+        
+        const listings = await response.json();
+        
+        // Xaritaga markerlar qo'shish
+        addMarkersToMap(listings);
+        
+        // Loadingni yashirish
+        hideLoading();
+        
+        return listings;
+      } catch (error) {
+        console.error('E\'lonlarni olishda xatolik:', error);
+        hideLoading();
+        alert('E\'lonlarni yuklashda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.');
+        return [];
+      }
+    }
+    
+    // Xaritaga markerlar qo'shish
+    function addMarkersToMap(listings) {
+      // Avvalgi markerlarni tozalash
+      clearMarkers();
+      
+      listings.forEach(listing => {
+        // Koordinatalarni olish
+        const [latitude, longitude] = listing.location.split(',').map(coord => parseFloat(coord.trim()));
+        
+        // Marker yaratish
+        const marker = L.marker([latitude, longitude]).addTo(map);
+        
+        // Popup kontenti
+        const popupContent = `
+          <div class="listing-popup">
+            <h3>${listing.title}</h3>
+            <p>${listing.description}</p>
+            <p class="price">${listing.price}</p>
+            <p>Xonalar: ${listing.rooms}</p>
+            <p>Kategoriya: ${listing.category}</p>
+            <p>Tel: ${listing.phone}</p>
+          </div>
+        `;
+        
+        // Popup qo'shish
+        marker.bindPopup(popupContent);
+        
+        // Markerni saqlash
+        markers.push(marker);
+      });
+    }
+    
+    // Markerlarni tozalash
+    function clearMarkers() {
+      markers.forEach(marker => map.removeLayer(marker));
+      markers = [];
+    }
+    
+    // Loading ko'rsatish
+    function showLoading() {
+      let loadingDiv = document.getElementById('loading');
+      
+      if (!loadingDiv) {
+        loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading';
+        loadingDiv.className = 'loading';
+        loadingDiv.innerHTML = `
+          <div class="spinner"></div>
+          <span>Yuklanmoqda...</span>
+        `;
+        document.body.appendChild(loadingDiv);
+      }
+      
+      loadingDiv.style.display = 'flex';
+    }
+    
+    // Loadingni yashirish
+    function hideLoading() {
+      const loadingDiv = document.getElementById('loading');
+      if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+      }
+    }
+    
+    // Filtrlash funksiyalari
+    document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+    document.getElementById('roomFilter').addEventListener('change', applyFilters);
+    document.getElementById('priceFilter').addEventListener('change', applyFilters);
+    document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    
+    function applyFilters() {
+      const category = document.getElementById('categoryFilter').value;
+      const rooms = document.getElementById('roomFilter').value;
+      const priceRange = document.getElementById('priceFilter').value;
+      
+      let minPrice, maxPrice;
+      
+      if (priceRange) {
+        [minPrice, maxPrice] = priceRange.split('-').map(val => {
+          const num = parseInt(val);
+          return isNaN(num) ? null : num;
+        });
+      }
+      
+      fetchListings({
+        category: category || undefined,
+        rooms: rooms || undefined,
+        min_price: minPrice || undefined,
+        max_price: maxPrice || undefined
+      });
+    }
+    
+    function resetFilters() {
+      document.getElementById('categoryFilter').value = '';
+      document.getElementById('roomFilter').value = '';
+      document.getElementById('priceFilter').value = '';
+      applyFilters();
+    }
+    
+    // Foydalanuvchi joylashuvini aniqlash
+    map.on('locationfound', function(e) {
+      const radius = e.accuracy / 2;
+      
+      L.marker(e.latlng).addTo(map)
+        .bindPopup("Siz shu yerda turibsiz").openPopup();
+      
+      L.circle(e.latlng, radius).addTo(map);
+    });
+    
+    map.on('locationerror', function(e) {
+      console.log("Geolokatsiya aniqlanmadi: " + e.message);
+    });
+    
+    // Dastlabki e'lonlarni yuklash
+    fetchListings();
+  </script>
+</body>
+</html>
