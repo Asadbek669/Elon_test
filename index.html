@@ -1,555 +1,68 @@
-<!DOCTYPE html>
-<html lang="uz">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Uy-joy E'lonlari Xaritasi</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Telegram WebApp — Simple Fullscreen</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: #f5f7fa;
-      color: #333;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      position: relative;
-      z-index: 1000;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-    }
-
-    #map {
-      flex: 1;
-      z-index: 1;
-    }
-
-    .listing-popup {
-      max-width: 250px;
-      text-align: center;
-    }
-    
-    .listing-popup h3 {
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-    
-    .listing-popup p {
-      margin: 5px 0;
-      font-size: 12px;
-    }
-
-    .listing-popup button {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 0.5rem;
-      background-color: #4f46e5;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    .listing-popup button:hover {
-      background-color: #4338ca;
-    }
-
-    .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1000;
-      background-color: rgba(255, 255, 255, 0.9);
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid #e2e8f0;
-      border-top: 3px solid #4f46e5;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .location-btn {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      background: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-    
-    .location-btn:hover {
-      background: #f0f0f0;
-    }
-    
-    .error-message {
-      position: absolute;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #fee2e2;
-      color: #b91c1c;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .retry-btn {
-      background-color: #4f46e5;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    
-    .telegram-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
-    
-    .telegram-modal.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-    
-    .modal-content {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-    }
-    
-    .modal-content h2 {
-      margin-bottom: 1rem;
-      color: #4f46e5;
-    }
-    
-    .modal-content p {
-      margin-bottom: 1.5rem;
-      line-height: 1.5;
-    }
-    
-    .modal-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .modal-btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    
-    .modal-btn.primary {
-      background-color: #4f46e5;
-      color: white;
-    }
-    
-    .modal-btn.secondary {
-      background-color: #e5e7eb;
-      color: #4b5563;
-    }
+    html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
+    body{display:flex;align-items:center;justify-content:center;background:#f6f7fb;color:#111}
+    .container{width:95%;max-width:720px;text-align:center;padding:24px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
+    button{margin:8px;padding:10px 14px;border-radius:8px;border:0;background:#0088cc;color:#fff;font-weight:600;cursor:pointer}
+    button.secondary{background:#e6eef8;color:#004a66}
+    p.small{color:#556; font-size:14px}
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>Uy-joy E'lonlari Xaritasi</h1>
-    </header>
+    <h1>Telegram WebApp — Simple Fullscreen</h1>
+    <p class="small">This minimal page tries to expand inside Telegram Web Apps. In a normal browser it uses the Fullscreen API.</p>
 
-    <div id="map"></div>
-    <button class="location-btn" id="locationBtn" title="Joylashuvni ko'rsatish">📍</button>
-  </div>
-
-  <!-- Telegram ID so'rov modali -->
-  <div class="telegram-modal" id="telegramModal">
-    <div class="modal-content">
-      <h2>Telegram ID ni saqlash</h2>
-      <p>E'lon ma'lumotlarini avtomatik Telegramingizga yuborishimiz uchun, iltimos Telegram ID ni bir marta kiriting. Keyingi safar so'ralmaydi.</p>
-      <input type="text" id="telegramIdInput" placeholder="Telegram ID (masalan: 123456789)" style="padding: 0.75rem; width: 100%; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 1.5rem;">
-      <div class="modal-buttons">
-        <button class="modal-btn secondary" id="cancelBtn">Bekor qilish</button>
-        <button class="modal-btn primary" id="saveTelegramIdBtn">Saqlash</button>
-      </div>
+    <div>
+      <button id="open">Open full / expand</button>
+      <button id="close" class="secondary">Exit / Close</button>
     </div>
+
+    <p class="small" style="margin-top:12px">Tip: some Telegram clients require a user tap to expand.</p>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
-    // API bazaviy URL
-    const API_BASE_URL = 'https://api-5-ta7r.onrender.com'; // backend API
-    
-    // Xaritani ishga tushirish
-    const map = L.map('map').setView([41.2995, 69.2401], 13);
+    const isTelegram = !!(window.Telegram && window.Telegram.WebApp);
+    const tg = isTelegram ? window.Telegram.WebApp : null;
 
-    // Tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19,
-      detectRetina: true
-    }).addTo(map);
+    const openBtn = document.getElementById('open');
+    const closeBtn = document.getElementById('close');
 
-    // MarkerClusterGroup
-    const markersCluster = L.markerClusterGroup();
-    map.addLayer(markersCluster);
-
-    // Foydalanuvchi markeri
-    let userMarker = null;
-    
-    // Tanlangan e'lon ID si
-    let selectedListingId = null;
-    
-    // Demo ma'lumotlar - server ishlamayotganda ko'rsatish uchun
-    const demoListings = [
-      {
-        id: 1,
-        title: "Yangi kvartira, Yunusobod",
-        price: "120 000 UZS",
-        rooms: "3",
-        location: "41.3376,69.3032"
-      },
-      {
-        id: 2,
-        title: "Ijara uy, Chilonzor",
-        price: "90 000 UZS",
-        rooms: "2",
-        location: "41.2894,69.2216"
-      },
-      {
-        id: 3,
-        title: "Sotiladi, Yakkasaroy",
-        price: "150 000 UZS",
-        rooms: "4",
-        location: "41.2826,69.2612"
-      }
-    ];
-
-    // Loading ko'rsatish
-    function showLoading() {
-      let loadingDiv = document.getElementById('loading');
-      if (!loadingDiv) {
-        loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading';
-        loadingDiv.className = 'loading';
-        loadingDiv.innerHTML = `<div class="spinner"></div><span>Yuklanmoqda...</span>`;
-        document.body.appendChild(loadingDiv);
-      }
-      loadingDiv.style.display = 'flex';
+    function requestFullscreen(){
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if(req) req.call(el).catch(()=>{});
     }
 
-    function hideLoading() {
-      const loadingDiv = document.getElementById('loading');
-      if (loadingDiv) loadingDiv.style.display = 'none';
-    }
-    
-    // Xatolikni ko'rsatish
-    function showError(message) {
-      let errorDiv = document.getElementById('error');
-      if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'error';
-        errorDiv.className = 'error-message';
-        document.body.appendChild(errorDiv);
-      }
-      
-      errorDiv.innerHTML = `
-        <span>${message}</span>
-        <button class="retry-btn" onclick="fetchListings()">Qayta urinish</button>
-        <button class="retry-btn" onclick="useDemoData()">Demo ma'lumotlarni ko'rsatish</button>
-      `;
-      errorDiv.style.display = 'flex';
-    }
-    
-    function hideError() {
-      const errorDiv = document.getElementById('error');
-      if (errorDiv) errorDiv.style.display = 'none';
-    }
-    
-    // Demo ma'lumotlardan foydalanish
-    function useDemoData() {
-      hideError();
-      addMarkersToMap(demoListings);
-      alert("Server hozirda ishlamayotgani uchun demo ma'lumotlar ko'rsatilmoqda");
-    }
-    
-    // Telegram ID ni localStorage dan olish
-    function getTelegramId() {
-      return localStorage.getItem('telegramId');
-    }
-    
-    // Telegram ID ni localStorage ga saqlash
-    function saveTelegramId(id) {
-      localStorage.setItem('telegramId', id);
-    }
-    
-    // Telegram modalini ko'rsatish
-    function showTelegramModal() {
-      const modal = document.getElementById('telegramModal');
-      modal.classList.add('active');
-    }
-    
-    // Telegram modalini yopish
-    function hideTelegramModal() {
-      const modal = document.getElementById('telegramModal');
-      modal.classList.remove('active');
+    function exitFullscreen(){
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if(exit) exit.call(document).catch(()=>{});
     }
 
-    // Joylashuvni ko'rsatish
-    function showUserLocation() {
-      if (!navigator.geolocation) {
-        alert("Sizning brauzeringiz geolokatsiyani qo'llab-quvvatlamaydi");
+    openBtn.addEventListener('click', ()=>{
+      if(tg && typeof tg.expand === 'function'){
+        try{ tg.expand(); }catch(e){ requestFullscreen(); }
         return;
       }
-
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          const userLat = position.coords.latitude;
-          const userLng = position.coords.longitude;
-          
-          // Avvalgi markerni o'chirish
-          if (userMarker) {
-            map.removeLayer(userMarker);
-          }
-          
-          // Yangi marker yaratish
-          userMarker = L.marker([userLat, userLng])
-            .addTo(map)
-            .bindPopup("Siz shu yerda turibsiz")
-            .openPopup();
-          
-          // Xaritani foydalanuvchi joylashuviga markirlash
-          map.setView([userLat, userLng], 15);
-        },
-        function(error) {
-          alert("Joylashuvni aniqlashda xatolik yuz berdi. Iltimos, joylashuvga ruxsat bering.");
-        }
-      );
-    }
-
-    // Joylashuv tugmasi bosilganda
-    document.getElementById('locationBtn').addEventListener('click', showUserLocation);
-    
-    // Telegram ID ni saqlash tugmasi
-    document.getElementById('saveTelegramIdBtn').addEventListener('click', function() {
-      const telegramId = document.getElementById('telegramIdInput').value.trim();
-      
-      if (!telegramId) {
-        alert("Iltimos, Telegram ID ni kiriting!");
-        return;
-      }
-      
-      saveTelegramId(telegramId);
-      hideTelegramModal();
-      
-      // Saqlangan ID bilan e'lon ma'lumotlarini yuborish
-      if (selectedListingId) {
-        sendToTelegram(selectedListingId, telegramId);
-      }
-    });
-    
-    // Modalni yopish
-    document.getElementById('cancelBtn').addEventListener('click', function() {
-      hideTelegramModal();
-      selectedListingId = null;
+      requestFullscreen();
     });
 
-    // API dan e'lonlarni olish
-    async function fetchListings() {
-      try {
-        showLoading();
-        hideError();
-        
-        const response = await fetch(`${API_BASE_URL}/listings`);
-        
-        if (!response.ok) {
-          // Agar server xato qaytarsa, demo ma'lumotlardan foydalanish
-          if (response.status >= 500) {
-            throw new Error(`Server xatosi: ${response.status}`);
-          } else {
-            throw new Error(`HTTP xatosi: ${response.status}`);
-          }
-        }
-        
-        const listings = await response.json();
-        addMarkersToMap(listings);
-        hideLoading();
-      } catch (error) {
-        console.error("E'lonlarni olishda xatolik:", error);
-        hideLoading();
-        showError("Serverga ulanishda muammo. Iltimos, keyinroq qayta urinib ko'ring.");
+    closeBtn.addEventListener('click', ()=>{
+      if(tg && typeof tg.close === 'function'){
+        try{ tg.close(); }catch(e){}
       }
-    }
+      exitFullscreen();
+    });
 
-    // Markerlarga qo'shish
-    function addMarkersToMap(listings) {
-      markersCluster.clearLayers();
-      listings.forEach(listing => {
-        // Location ma'lumotlarini to'g'ri olish
-        let lat, lng;
-        
-        if (listing.latitude && listing.longitude) {
-          // Agar alohida latitude va longitude maydonlari mavjud bo'lsa
-          lat = listing.latitude;
-          lng = listing.longitude;
-        } else if (listing.location) {
-          // Agar location string sifatida "lat,lng" formatida bo'lsa
-          try {
-            const parts = listing.location.split(',');
-            if (parts.length === 2) {
-              lat = parseFloat(parts[0].trim());
-              lng = parseFloat(parts[1].trim());
-            } else {
-              console.error("Noto'g'ri location formati:", listing.location);
-              return; // Noto'g'ri format, marker qo'shilmaydi
-            }
-          } catch (e) {
-            console.error("Locationni parse qilishda xato:", e);
-            return; // Xato yuz bersa, marker qo'shilmaydi
-          }
-        } else {
-          console.error("Location ma'lumotlari yo'q:", listing);
-          return; // Location ma'lumotlari yo'q, marker qo'shilmaydi
-        }
-        
-        const marker = L.marker([lat, lng]);
-        const popupContent = `
-          <div class="listing-popup">
-            <h3>${listing.title}</h3>
-            <p>${listing.price || 'Narx koʻrsatilmagan'}</p>
-            <p>${listing.rooms ? `${listing.rooms} xona` : ''}</p>
-            <button onclick="showDetails(${listing.id})">Batafsil</button>
-          </div>
-        `;
-        marker.bindPopup(popupContent);
-        markersCluster.addLayer(marker);
-      });
-      
-      // Agar markerlar qo'shilmagan bo'lsa, xaritani markirlash
-      if (listings.length > 0 && listings[0].latitude && listings[0].longitude) {
-        map.setView([listings[0].latitude, listings[0].longitude], 13);
-      }
-    }
-
-    // Batafsil tugmasi - Telegramga yuborish
-    async function showDetails(listingId) {
-      selectedListingId = listingId;
-      const telegramId = getTelegramId();
-      
-      if (!telegramId) {
-        // Agar Telegram ID saqlanmagan bo'lsa, so'raladi
-        showTelegramModal();
-      } else {
-        // Agar saqlangan bo'lsa, to'g'ridan-to'g'ri yuboriladi
-        sendToTelegram(listingId, telegramId);
-      }
-    }
-    
-    // Telegramga ma'lumot yuborish
-    async function sendToTelegram(listingId, telegramId) {
-      try {
-        showLoading();
-        
-        const response = await fetch(`${API_BASE_URL}/send_to_telegram`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            listing_id: listingId,
-            chat_id: telegramId
-          })
-        });
-        
-        if (!response.ok) {
-          // Agar server xato qaytarsa, demo javob berish
-          if (response.status >= 500) {
-            throw new Error("Server xatosi: Ma'lumotlarni yuborib bo'lmadi. Iltimos, keyinroq urinib ko'ring.");
-          }
-          
-          const errorData = await response.json();
-          throw new Error(errorData.detail || "Ma'lumot yuborilmadi!");
-        }
-        
-        hideLoading();
-        alert("E'lon tafsilotlari Telegramingizga yuborildi ✅");
-      } catch (error) {
-        console.error("Batafsil yuborishda xato:", error);
-        hideLoading();
-        alert("E'lonni yuborishda muammo: " + error.message);
-      }
-    }
-
-    // Dastlabki yuklash
-    fetchListings();
+    // Try auto-expand when loaded inside Telegram (won't always work without gesture)
+    window.addEventListener('load', ()=>{
+      try{ if(tg && typeof tg.expand === 'function') tg.expand(); }catch(e){}
+    });
   </script>
 </body>
 </html>
