@@ -3,66 +3,129 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Telegram WebApp — Simple Fullscreen</title>
+  <meta name="theme-color" content="#0088cc" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Telegram Mini App — Fullscreen (mobile)</title>
   <style>
-    html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
-    body{display:flex;align-items:center;justify-content:center;background:#f6f7fb;color:#111}
-    .container{width:95%;max-width:720px;text-align:center;padding:24px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
-    button{margin:8px;padding:10px 14px;border-radius:8px;border:0;background:#0088cc;color:#fff;font-weight:600;cursor:pointer}
-    button.secondary{background:#e6eef8;color:#004a66}
-    p.small{color:#556; font-size:14px}
+    :root{--bg:#f7fbff;--card:#ffffff;--accent:#0088cc;--text:#062b3a}
+    html,body{height:100%;margin:0;padding:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial}
+    /* Respect iOS safe area insets */
+    body{
+      padding-top:env(safe-area-inset-top);
+      padding-left:env(safe-area-inset-left);
+      padding-right:env(safe-area-inset-right);
+      padding-bottom:env(safe-area-inset-bottom);
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* Make the app take full viewport on mobile */
+    #app{
+      width:100%;
+      height:100vh;            /* important for mobile fullscreen handling */
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .card{
+      width:100%;
+      max-width:720px;
+      background:var(--card);
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 8px 24px rgba(2,6,23,0.06);
+      text-align:center;
+    }
+
+    h1{margin:0 0 8px 0;font-size:18px}
+    p{margin:0 0 12px 0;color:#234}
+    .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    button{
+      appearance:none;border:0;padding:10px 14px;border-radius:10px;background:var(--accent);color:white;font-weight:600;
+      cursor:pointer;
+    }
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(0,136,204,0.12)}
+    small{display:block;margin-top:10px;color:#456}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Telegram WebApp — Simple Fullscreen</h1>
-    <p class="small">This minimal page tries to expand inside Telegram Web Apps. In a normal browser it uses the Fullscreen API.</p>
+  <div id="app" role="application">
+    <div class="card">
+      <h1>Telegram Mini App — Fullscreen</h1>
+      <p>Tap the button below to expand to full screen on mobile Telegram. If opened inside Telegram, the app will request an expanded (immersive) view.</p>
 
-    <div>
-      <button id="open">Open full / expand</button>
-      <button id="close" class="secondary">Exit / Close</button>
+      <div class="controls">
+        <button id="openBtn">Expand / Fullscreen</button>
+        <button id="closeBtn" class="ghost">Exit / Close</button>
+      </div>
+
+      <small>Open this page from a Telegram bot's Web App (not directly in browser) for best result.</small>
     </div>
-
-    <p class="small" style="margin-top:12px">Tip: some Telegram clients require a user tap to expand.</p>
   </div>
 
   <script>
+    // Detect Telegram WebApp
     const isTelegram = !!(window.Telegram && window.Telegram.WebApp);
     const tg = isTelegram ? window.Telegram.WebApp : null;
 
-    const openBtn = document.getElementById('open');
-    const closeBtn = document.getElementById('close');
+    const openBtn = document.getElementById('openBtn');
+    const closeBtn = document.getElementById('closeBtn');
 
-    function requestFullscreen(){
+    // Fallback to browser Fullscreen API
+    function requestFullscreenFallback(){
       const el = document.documentElement;
       const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
       if(req) req.call(el).catch(()=>{});
     }
-
-    function exitFullscreen(){
+    function exitFullscreenFallback(){
       const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
       if(exit) exit.call(document).catch(()=>{});
     }
 
-    openBtn.addEventListener('click', ()=>{
+    openBtn.addEventListener('click', () => {
+      // Preferred: Telegram WebApp expand (works in Telegram mobile clients)
       if(tg && typeof tg.expand === 'function'){
-        try{ tg.expand(); }catch(e){ requestFullscreen(); }
+        try{
+          tg.expand();               // ask Telegram to expand the webapp area
+        }catch(e){
+          requestFullscreenFallback();
+        }
         return;
       }
-      requestFullscreen();
+      // Otherwise use browser Fullscreen
+      requestFullscreenFallback();
     });
 
-    closeBtn.addEventListener('click', ()=>{
+    closeBtn.addEventListener('click', () => {
       if(tg && typeof tg.close === 'function'){
         try{ tg.close(); }catch(e){}
       }
-      exitFullscreen();
+      exitFullscreenFallback();
     });
 
-    // Try auto-expand when loaded inside Telegram (won't always work without gesture)
-    window.addEventListener('load', ()=>{
-      try{ if(tg && typeof tg.expand === 'function') tg.expand(); }catch(e){}
+    // Try to auto-expand when loaded inside Telegram (may be blocked on some clients without user gesture)
+    window.addEventListener('load', () => {
+      try{
+        if(tg && typeof tg.expand === 'function'){
+          tg.expand();
+        }
+      }catch(e){}
     });
+
+    // Optional: keep layout height correct when mobile UI (address bar) changes
+    // Set --vh to 1% of viewport height and use it if needed in CSS (not used here but kept for extensibility)
+    function setVh(){
+      document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    }
+    window.addEventListener('resize', setVh);
+    setVh();
   </script>
 </body>
 </html>
