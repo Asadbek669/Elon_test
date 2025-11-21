@@ -2,17 +2,32 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Test WebApp</title>
-</head>
-<body>
+<title>Asadbek WebApp</title>
 
-<h1>Asadbek WebApp</h1>
+<style>
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+        font-size: 28px;
+        font-family: Arial;
+        color: black;
+    }
+</style>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+
+<div style="padding: 20px;">
+    Asadbek WebApp
+</div>
+
 <script>
     Telegram.WebApp.ready();
-    Telegram.WebApp.expand();   // <<< EVOS dagidek fullscreen
-    // Telegram.WebApp.enableClosingConfirmation();
+    Telegram.WebApp.expand();
+    Telegram.WebApp.disableVerticalSwipes();   // ixtiyoriy — EVOS shunaqa qiladi
 </script>
 
 </body>
